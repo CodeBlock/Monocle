@@ -22,7 +22,9 @@ object BuildSettings {
 
 object Dependencies {
   val scalaz       = "org.scalaz"      %% "scalaz-core"               % "7.0.5"
-  val shapeless    = "com.chuusai"     % "shapeless"                  % "2.0.0-M1" cross CrossVersion.full
+  val shapeless    = "com.chuusai"     %  "shapeless"                 % "2.0.0-M1" cross CrossVersion.full
+  val jodaTime     = "joda-time"       %  "joda-time"                 % "2.3"
+  val jodaConvert  = "org.joda"        % "joda-convert"               % "1.2"
   val scalaCheck   = "org.scalacheck"  %% "scalacheck"                % "1.10.1"
   val scalaCheckBinding = "org.scalaz" %% "scalaz-scalacheck-binding" % "7.0.5"        % "test"
   val specs2       = "org.specs2"      %% "specs2"                    % "1.12.3"       % "test"
@@ -43,7 +45,7 @@ object ScalaLensBuild extends Build {
     settings = buildSettings ++ Seq(
       publishArtifact := false,
       run <<= run in Compile in core) ++ sonatypeSettings
-  ) aggregate(core, generic, examples)
+  ) aggregate(core, generic, joda, examples)
 
   lazy val core: Project = Project(
     "monocle-core",
@@ -61,6 +63,14 @@ object ScalaLensBuild extends Build {
     )
   ) dependsOn(core % "test->test;compile->compile")
 
+  lazy val joda: Project = Project(
+    "monocle-joda",
+    file("joda"),
+    settings = buildSettings ++ Seq(
+      libraryDependencies ++= Seq(scalaz, jodaTime, jodaConvert) ++ macrosDep ++ testsDep
+    )
+  ) dependsOn(core % "test->test;compile->compile")
+
   lazy val examples: Project = Project(
     "monocle-examples",
     file("examples"),
@@ -68,7 +78,7 @@ object ScalaLensBuild extends Build {
       publishArtifact := false,
       libraryDependencies ++= Seq(scalaz, shapeless) ++ testsDep
     )
-  ) dependsOn(core % "test->test;compile->compile", generic)
+  ) dependsOn(core % "test->test;compile->compile", generic, joda)
 }
 
 object ScalaLensPublishing  {
